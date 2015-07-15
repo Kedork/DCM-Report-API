@@ -4,7 +4,8 @@ import argparse
 import sys
 from download_file import main as download
 
-from apiclient import sample_tools
+import json
+import sample_tools
 from oauth2client import client
 
 # Declare command-line flags.
@@ -17,41 +18,49 @@ argparser.add_argument(
     help='The ID of the report to list files for')
 
 
-def main(argv):
-  # Authenticate and construct service.
-  service, flags = sample_tools.init(
-      argv, 'dfareporting', 'v2.1', __doc__, __file__, parents=[argparser],
-      scope=['https://www.googleapis.com/auth/dfareporting',
+def main():
+    # Authenticate and construct service.
+    service, flags = sample_tools.init(
+        '', 'dfareporting', 'v2.1', __doc__, __file__, parents=[argparser],
+        scope=['https://www.googleapis.com/auth/dfareporting',
              'https://www.googleapis.com/auth/dfatrafficking'])
 
-  profile_id = flags.profile_id
-  report_id = flags.report_id
+    with open('IDs.json') as data_file:
+        data = json.load(data_file)
 
-  try:
-    # Construct a get request for the specified report.
-    request = service.reports().files().list(
-        profileId=profile_id, reportId=report_id)
+    for alldata in data['data']:
+        profile_id = data['data'][alldata]['Profile']
+        for Reports in data['data'][alldata]['Reports']:
+            report_id = data['data'][alldata]['Reports'][Reports]
 
-    while True:
-      # Execute request and print response.
-      response = request.execute()
+            try:
+                # Construct a get request for the specified report.
+                request = service.reports().files().list(profileId=profile_id, reportId=report_id)
+                f = open('Reports.txt', 'w')
+                while True:
+                    # Execute request and print response.
+                    response = request.execute()
 
-      for report_file in response['items']:
-        print ('Report file with ID %s and file name "%s" has status %s.'
-               % (report_file['id'], report_file['fileName'],
-                  report_file['status']))
-        ids = '%s,%s\n' % (report_file['reportId'], report_file['id'])
+                    for report_file in response['items']:
+                        #f.writelines('Report file with ID %s and file name "%s" has status %s.'
+                            #% (report_file['id'], report_file['fileName'],
+                                #report_file['status']))
+                        f.writelines(report_file['id'])
+                        f.writelines('\n')
 
-        download(report_file['reportId'], report_file['id'])
+                    if response['items'] and response['nextPageToken']:
+                        request = service.reports().files().list_next(request, response)
+                    else:
+                        break
+                f.close()
+            except client.AccessTokenRefreshError:
+                print ('The credentials have been revoked or expired, please re-run the '
+                    'application to re-authorize')
 
-      if response['items'] and response['nextPageToken']:
-        break
-        #request = service.reports().files().list_next(request, response)
-      else:
-        break
-  except client.AccessTokenRefreshError:
-    print ('The credentials have been revoked or expired, please re-run the '
-           'application to re-authorize')
+            f = open('Reports.txt','r')
+            file_id = f.readline()
+            download(report_id, file_id)
+            f.close()
 
 if __name__ == '__main__':
-  main(sys.argv)
+  main()

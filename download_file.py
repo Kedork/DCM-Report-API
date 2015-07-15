@@ -26,20 +26,27 @@ def main(report_id, file_id):
   report_id = report_id
   file_id = file_id
 
+  report_id_ = int(report_id)
+  file_id_ = int(file_id)
+  
+  print 'Download of file %s started' % (report_id)
+
   try:
     # Construct the request.
-    request = service.files().get_media(reportId=report_id, fileId=file_id)
-
+    request = service.files().get_media(reportId=report_id_,fileId=file_id_)
+    file_name = str(report_id)+'.csv'
+    print 'Execute of file %s started' % (report_id)
+    data = request.execute()
     # Execute request and print the file contents
-    f = open('Conversions_Metadata.csv', 'w' )
-    f.write(request.execute())
+    f = open(file_name, 'w')
+    f.write(data)
     f.close()
+    print 'Writing of file %s completed' % (report_id)
     #print request.execute()
 
   except client.AccessTokenRefreshError:
     print ('The credentials have been revoked or expired, please re-run the '
            'application to re-authorize')
 
-
 if __name__ == '__main__':
-  main(sys.argv)
+  main()

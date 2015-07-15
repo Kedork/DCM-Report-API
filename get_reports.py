@@ -3,7 +3,7 @@ __author__ = "Kevork Kazanjian"
 import argparse
 import sys
 
-from apiclient import sample_tools
+import sample_tools
 from oauth2client import client
 
 # Declare command-line flags.
@@ -13,14 +13,14 @@ argparser.add_argument(
     help='The ID of the profile to list reports for')
 
 
-def main(argv):
+def main():
   # Authenticate and construct service.
   service, flags = sample_tools.init(
-      argv, 'dfareporting', 'v2.1', __doc__, __file__, parents=[argparser],
+      '', 'dfareporting', 'v2.1', __doc__, __file__, parents=[argparser],
       scope=['https://www.googleapis.com/auth/dfareporting',
              'https://www.googleapis.com/auth/dfatrafficking'])
 
-  profile_id = flags.profile_id
+  profile_id = 1087970
 
   try:
     # Construct the request.
@@ -44,4 +44,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  main(sys.argv)
+  main()
